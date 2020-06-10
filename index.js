@@ -27,6 +27,17 @@ axios
 //   })
 //   .then(() => console.log(state.Home));
 
+let req = new Request(
+  "https://newsapi.org/v2/everything?q=fishing&apiKey=ce592c9e9c6441cca100f4bc925f4273"
+);
+fetch(req, {
+  // headers: {
+  //   "Access-Control-Allow-Origin": window.location.origin
+  // }
+})
+  .then(response => response.json())
+  .then(res => console.log(res));
+
 axios
   .get(
     `http://api.openweathermap.org/data/2.5/weather?lat=36.11618&lon=-85.18745&appid=06c7cb455d2c2ecf48244fb8596609f8`
