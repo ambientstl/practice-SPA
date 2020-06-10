@@ -4,3 +4,6 @@ export { default as Gallery } from "./Gallery";
 export { default as Form } from "./Form";
 export { default as Links } from "./Links";
 export { default as Blog } from "./Blog";
+export { default as User } from "./User";
+export { default as Register } from "./Register";
+export { default as Signin } from "./SignIn";

@@ -3,7 +3,36 @@ import * as state from "./store";
 import Navigo from "navigo";
 import { capitalize } from "lodash";
 import axios from "axios";
-console.log("requesting data from API");
+import { auth, db } from "./firebase";
+
+axios
+  .get(`https://api.github.com/users/${process.env.GITHUB_USERNAME}/repos`, {
+    headers: {
+      Authorization: `token ${process.env.GITHUB_TOKEN}`
+    }
+  })
+  .then(response => console.log(response.data));
+// axios
+//   .get(
+//     "http://api.openweathermap.org/data/2.5/weather?lat=38.63&lon=-90.2&appid=83584418c514b5e3441dc1e28901d462"
+//   )
+//   .then(response => {
+//     const data = response.data;
+//     console.log("saving weather data to state");
+//     state.Home.weather.city = data.name;
+//     console.log(state.Home);
+//     state.Home.weather.temp = data.main.temp;
+//     console.log(data.weather);
+//     state.Home.weather.description = data.weather[0].main;
+//   })
+//   .then(() => console.log(state.Home));
+
+axios
+  .get(
+    `http://api.openweathermap.org/data/2.5/weather?lat=36.11618&lon=-85.18745&appid=06c7cb455d2c2ecf48244fb8596609f8`
+  )
+  .then(response => console.log(response));
+
 axios
   .get("https://jsonplaceholder.typicode.com/posts", {
     headers: {
@@ -37,6 +66,10 @@ const render = (st = state.Home) => {
   addNavToggle();
   // addNavEventListeners();
   addPicOnFormSubmit(st);
+
+  listenForUserRegister(st);
+  listenForSignOut();
+  listenForLogIn(st);
 };
 
 const router = new Navigo(window.location.origin);
@@ -52,6 +85,123 @@ router
   })
   .resolve();
 // render();
+
+// REGISTER
+function listenForUserRegister(st) {
+  if (st.view === "Register") {
+    document.querySelector("form").addEventListener("submit", event => {
+      event.preventDefault();
+      // convert HTML elements to Array
+      let inputList = Array.from(event.target.elements);
+      // remove submit button from list
+      inputList.pop();
+      const inputs = inputList.map(input => input.value);
+      let username = inputs[0];
+      let email = inputs[1];
+      let password = inputs[2];
+
+      // create user in auth
+      auth
+        .createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          addUserToState(username, email);
+          addUserToDb(username, email);
+        })
+        .then(() => render());
+    });
+  }
+}
+function addUserToState(username, email) {
+  state.User.username = username;
+  state.User.email = email;
+  state.User.loggedIn = true;
+  console.log("user added to state");
+  console.log(state.User);
+}
+function addUserToDb(username, email) {
+  db.collection("users")
+    .add({
+      username: username,
+      email: email,
+      loggedIn: true
+    })
+    .then(() => {
+      console.log("user added to DB");
+    });
+}
+
+// LOG-OUT
+function listenForSignOut() {
+  document.querySelector("header a").addEventListener("click", event => {
+    event.preventDefault();
+    auth.signOut().then(() => {
+      signOutUserInDb(state.User);
+      removeUserFromState();
+    });
+  });
+}
+function removeUserFromState() {
+  state.User.username = "";
+  state.User.email = "";
+  state.User.loggedIn = false;
+  console.log("user removed to state");
+  console.log(state.User);
+}
+function signOutUserInDb(user) {
+  let email = user.email;
+  db.collection("users")
+    .get()
+    .then(snapshot =>
+      snapshot.docs.forEach(doc => {
+        if (email === doc.data().email) {
+          let id = doc.id;
+          db.collection("users")
+            .doc(id)
+            .update({ loggedIn: false });
+        }
+      })
+    )
+    .then(() => console.log("user signed out in DB"));
+}
+
+// LOG-IN
+function listenForLogIn(st) {
+  console.log("log-in function");
+  if (st.view === "Signin") {
+    console.log("view is sign in");
+    document.querySelector("form").addEventListener("submit", event => {
+      event.preventDefault();
+      console.log("form submitted");
+      // convert HTML elements to Array
+      let inputList = Array.from(event.target.elements);
+      // remove submit button from list
+      inputList.pop();
+      const inputs = inputList.map(input => input.value);
+      let email = inputs[0];
+      let password = inputs[1];
+
+      auth.signInWithEmailAndPassword(email, password).then(() => {
+        signInUserInDb(email);
+      });
+    });
+  }
+}
+function signInUserInDb(email) {
+  db.collection("users")
+    .get()
+    .then(snapshot =>
+      snapshot.docs.forEach(doc => {
+        if (email === doc.data().email) {
+          let id = doc.id;
+          db.collection("users")
+            .doc(id)
+            .update({ loggedIn: true });
+          addUserToState(doc.data().username, doc.data().email);
+        }
+      })
+    )
+    .then(() => console.log("user signed in in DB"));
+}
 
 function addNavEventListeners() {
   document.querySelectorAll("nav a").forEach(navLink => {
