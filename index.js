@@ -12,37 +12,6 @@ axios
     }
   })
   .then(response => console.log(response.data));
-// axios
-//   .get(
-//     "http://api.openweathermap.org/data/2.5/weather?lat=38.63&lon=-90.2&appid=83584418c514b5e3441dc1e28901d462"
-//   )
-//   .then(response => {
-//     const data = response.data;
-//     console.log("saving weather data to state");
-//     state.Home.weather.city = data.name;
-//     console.log(state.Home);
-//     state.Home.weather.temp = data.main.temp;
-//     console.log(data.weather);
-//     state.Home.weather.description = data.weather[0].main;
-//   })
-//   .then(() => console.log(state.Home));
-
-let req = new Request(
-  "https://newsapi.org/v2/everything?q=fishing&apiKey=ce592c9e9c6441cca100f4bc925f4273"
-);
-fetch(req, {
-  // headers: {
-  //   "Access-Control-Allow-Origin": window.location.origin
-  // }
-})
-  .then(response => response.json())
-  .then(res => console.log(res));
-
-axios
-  .get(
-    `http://api.openweathermap.org/data/2.5/weather?lat=36.11618&lon=-85.18745&appid=06c7cb455d2c2ecf48244fb8596609f8`
-  )
-  .then(response => console.log(response));
 
 axios
   .get("https://jsonplaceholder.typicode.com/posts", {
